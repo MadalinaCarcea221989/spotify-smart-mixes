@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 import { SyncProvider } from "@/context/SyncContext";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function RootLayout({
   children,
@@ -28,6 +29,7 @@ export default function RootLayout({
             </main>
           </div>
         </SyncProvider>
+        <Analytics />
       </body>
     </html>
   );
