@@ -54,6 +54,11 @@ class LibrarySyncManager:
                 if results['next']:
                     results = self.sp.next(results)
                     self.progress["current"] = len(all_tracks)
+                    # Early save so dashboard shows count
+                    output_dir = "data/output"
+                    os.makedirs(output_dir, exist_ok=True)
+                    with open(f"{output_dir}/auto_synced_library.json", "w", encoding="utf-8") as f:
+                        json.dump({"tracks": [{"id": t["id"]} for t in all_tracks]}, f)
                     if progress_callback: await progress_callback(self.progress)
                 else:
                     break
