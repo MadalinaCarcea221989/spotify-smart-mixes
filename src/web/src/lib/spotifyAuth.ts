@@ -82,19 +82,30 @@ export const spotifyAuth = {
       }
       
       console.log("🧬 Backend Handshake Initiated...");
+ 
+      let attempt = 0;
+      let res;
+      while (attempt < 3) {
+        try {
+          res = await fetch(`${API_BASE}/exchange_token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: code,
+              code_verifier: verifier,
+              redirect_uri: REDIRECT_URI,
+            }),
+          });
+          if (res.ok) break;
+        } catch (e) {
+          console.warn(`Handshake attempt ${attempt + 1} failed, retrying...`);
+        }
+        attempt++;
+        if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+      }
 
-      const res = await fetch(`${API_BASE}/exchange_token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: code,
-          code_verifier: verifier,
-          redirect_uri: REDIRECT_URI,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
+      if (!res || !res.ok) {
+        const errorData = res ? await res.json().catch(() => ({})) : { detail: "Gateway Timeout" };
         throw new Error(`Auth Server Error: ${JSON.stringify(errorData.detail || errorData)}`);
       }
 

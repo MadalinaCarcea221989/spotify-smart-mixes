@@ -11,6 +11,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Pre-emptively wake up the backend as soon as the landing page loads
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8001/api/v1';
+    fetch(`${API_BASE}/sync_status/ping`).catch(() => {});
+
     if (spotifyAuth.isAuthenticated()) {
       router.push("/");
     }
