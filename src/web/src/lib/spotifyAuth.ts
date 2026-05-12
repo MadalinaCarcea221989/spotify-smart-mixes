@@ -58,36 +58,49 @@ export const spotifyAuth = {
   },
 
   exchangeCodeForToken: async (code: string) => {
-    const verifier = localStorage.getItem('spotify_code_verifier');
-    if (!verifier) {
-      throw new Error('Verification data lost. Please try logging in again.');
+    // 1. Prevent double-exchange (React StrictMode protection)
+    if (window.sessionStorage.getItem('spotify_exchange_in_progress')) {
+      console.log("⏳ Exchange already in progress, skipping redundant call.");
+      return;
     }
-    
-    console.log("🧬 Backend Handshake Initiated...");
+    window.sessionStorage.setItem('spotify_exchange_in_progress', 'true');
 
-    const res = await fetch(`${API_BASE}/exchange_token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code: code,
-        code_verifier: verifier,
-        redirect_uri: REDIRECT_URI,
-      }),
-    });
+    try {
+      const verifier = localStorage.getItem('spotify_code_verifier');
+      if (!verifier) {
+        throw new Error('Verification data lost. Please try logging in again.');
+      }
+      
+      console.log("🧬 Backend Handshake Initiated...");
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(`Auth Server Error: ${JSON.stringify(errorData.detail)}`);
+      const res = await fetch(`${API_BASE}/exchange_token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: code,
+          code_verifier: verifier,
+          redirect_uri: REDIRECT_URI,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(`Auth Server Error: ${JSON.stringify(errorData.detail || errorData)}`);
+      }
+
+      const data = await res.json();
+      if (data.access_token) {
+        localStorage.setItem('spotify_access_token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
+        localStorage.removeItem('spotify_code_verifier');
+        console.log("✅ Auth Successful!");
+        return data.access_token;
+      }
+      throw new Error('Login failed: No access token received.');
+    } finally {
+      // Always unlock, but wait a bit to ensure the redirect happens
+      setTimeout(() => window.sessionStorage.removeItem('spotify_exchange_in_progress'), 2000);
     }
-
-    const data = await res.json();
-    if (data.access_token) {
-      localStorage.setItem('spotify_access_token', data.access_token);
-      if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
-      localStorage.removeItem('spotify_code_verifier');
-      return data.access_token;
-    }
-    throw new Error('Login failed: No access token received.');
   },
 
   refreshAccessToken: async () => {
