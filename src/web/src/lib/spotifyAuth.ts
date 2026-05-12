@@ -51,6 +51,10 @@ export const spotifyAuth = {
 
       const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
       console.log("🚀 AUTH REDIRECT:", authUrl);
+      
+      // Wake up the backend pre-emptively to avoid timeout later
+      fetch(`${API_BASE}/sync_status/ping`).catch(() => {});
+      
       window.location.href = authUrl;
     } catch (error) {
       console.error("Login Initialization Failed:", error);
@@ -68,7 +72,13 @@ export const spotifyAuth = {
     try {
       const verifier = localStorage.getItem('spotify_code_verifier');
       if (!verifier) {
-        throw new Error('Verification data lost. Please try logging in again.');
+        // If we ALREADY have a token, it means the first attempt succeeded!
+        if (spotifyAuth.isAuthenticated()) {
+          console.log("✅ Already authenticated, skipping handshake.");
+          window.location.href = "/";
+          return;
+        }
+        throw new Error('Missing security verifier. Please start the login process again from the Home page.');
       }
       
       console.log("🧬 Backend Handshake Initiated...");
