@@ -113,13 +113,7 @@ export default function Sidebar() {
                 <User size={18} className="text-spotify-green" />
               )}
               <button 
-                onClick={() => {
-                  if (spotifyAuth.isMockMode()) {
-                    spotifyAuth.disableMockMode();
-                  } else {
-                    spotifyAuth.logout();
-                  }
-                }}
+                onClick={() => spotifyAuth.logout()}
                 className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
                 title="Logout"
               >
