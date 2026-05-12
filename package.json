@@ -1,0 +1,32 @@
+{
+  "name": "spotify-playlist-generator",
+  "version": "1.0.0",
+  "description": "Smart Spotify Playlist Generator with Music Data Enrichment",
+  "main": "script.js",
+  "scripts": {
+    "format": "prettier --write \"**/*.{js,css,html,json,md}\" --config config/.prettierrc --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{js,css,html,json,md}\" --config config/.prettierrc --ignore-path .prettierignore",
+    "lint:js": "eslint \"**/*.js\" --fix --config config/.eslintrc.js",
+    "lint:css": "stylelint \"**/*.css\" --fix --config config/.stylelintrc.json",
+    "format:python": "python scripts/format_code.py",
+    "format:all": "npm run format && npm run format:python",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "spotify",
+    "playlist",
+    "music",
+    "generator",
+    "api",
+    "last.fm",
+    "musicbrainz"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0",
+    "stylelint": "^15.0.0",
+    "stylelint-config-standard": "^34.0.0"
+  }
+}

@@ -7,10 +7,9 @@ __pycache__/
 *.pyc
 
 # Data & Output
-data/output/
-*.json
-*.png
-*.log
+data/output/*.json
+data/output/*.png
+data/output/*.log
 
 # Sensitive Info
 .env
