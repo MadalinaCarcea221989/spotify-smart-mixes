@@ -19,7 +19,7 @@ app.add_middleware(
         "http://localhost:3000",
         "https://*.vercel.app" # Allows any Vercel deployment
     ],
-    allow_origin_regex="https://.*\.vercel\.app", # For wildcard support
+    allow_origin_regex=r"https://.*\.vercel\.app", # For wildcard support
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
