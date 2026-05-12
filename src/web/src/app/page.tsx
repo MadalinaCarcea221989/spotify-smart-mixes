@@ -54,10 +54,14 @@ export default function Dashboard() {
       const interval = setInterval(() => {
         fetchActivities();
         fetchFeatures();
-      }, 5000);
+        // Auto-refresh summary cards if syncing is active
+        if (isSyncing) {
+          fetchSummary();
+        }
+      }, 3000); // Poll every 3 seconds during sync
       return () => clearInterval(interval);
     }
-  }, []);
+  }, [isSyncing]);
 
   const fetchActivities = async () => {
     try {
