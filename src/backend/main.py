@@ -10,10 +10,16 @@ import starlette.middleware.base as base
 
 app = FastAPI(title="Spotify Smart Playlist Generator")
 
-# 1. Restricted CORS (Best Practice: Allow only the frontend)
+# 1. Deployment-Ready CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:8000", 
+        "http://127.0.0.1:8000", 
+        "http://localhost:3000",
+        "https://*.vercel.app" # Allows any Vercel deployment
+    ],
+    allow_origin_regex="https://.*\.vercel\.app", # For wildcard support
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
