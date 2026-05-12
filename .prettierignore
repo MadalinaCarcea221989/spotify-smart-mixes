@@ -1,0 +1,15 @@
+# Files to ignore for Prettier formatting
+node_modules/
+spotify-venv/
+.venv/
+venv/
+.git/
+dist/
+build/
+*.log
+*.csv
+*.json.backup
+music_enrichment.log
+enhanced_music_data_*.json
+*.pyc
+__pycache__/

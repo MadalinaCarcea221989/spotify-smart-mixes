@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+scikit-learn
+hdbscan
+numpy
+pandas
+transformers
+pytest

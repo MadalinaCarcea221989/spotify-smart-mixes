@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotify Smart Playlist Generator - Advanced</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --spotify-green: #1DB954;
+      --spotify-green-bright: #1ed760;
+      --bg-dark: #090909;
+      --bg-card: rgba(25, 25, 25, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-dim: #b3b3b3;
+      --accent-gradient: linear-gradient(135deg, #1DB954 0%, #191414 100%);
+      --mesh-gradient: radial-gradient(at 0% 0%, hsla(141, 73%, 42%, 0.15) 0, transparent 50%), 
+                       radial-gradient(at 100% 100%, hsla(141, 73%, 42%, 0.1) 0, transparent 50%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      background-image: var(--mesh-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Glassmorphism Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--spotify-green); }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    /* Cinematic Header */
+    .header {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-icon {
+      font-size: 48px;
+      filter: drop-shadow(0 0 10px var(--spotify-green));
+    }
+
+    .logo-text h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(to right, #fff, var(--spotify-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Premium Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 40px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      width: fit-content;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 14px 28px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .tab-btn.active {
+      background: var(--spotify-green);
+      color: #000;
+      box-shadow: 0 10px 20px rgba(29, 185, 84, 0.3);
+    }
+
+    /* Cards & Grids */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 24px;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(29, 185, 84, 0.3);
+    }
+
+    .card-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Advanced Algorithm Grid */
+    .algo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .algo-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 28px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .algo-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--accent-gradient);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: -1;
+    }
+
+    .algo-card:hover { transform: translateY(-10px) scale(1.02); }
+    .algo-card.active { border-color: var(--spotify-green); }
+    .algo-card.active::before { opacity: 0.1; }
+
+    /* Inputs & Controls */
+    .input-field {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 16px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+      margin-top: 8px;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--spotify-green);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Cinematic Syncing Bar */
+    .sync-container {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 400px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--spotify-green);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 1000;
+      animation: slideInUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes slideInUp {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideOutDown {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(100px); opacity: 0; }
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--spotify-green);
+      width: 0%;
+      box-shadow: 0 0 15px var(--spotify-green);
+      transition: width 0.4s ease;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--spotify-green);
+      color: #000;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 500px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 20px rgba(29, 185, 84, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--spotify-green-bright);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 15px 30px rgba(29, 185, 84, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border: 1px solid var(--glass-border);
+      padding: 16px 40px;
+      border-radius: 500px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+    /* Mood Visualization */
+    .mood-map {
+      height: 400px;
+      background: radial-gradient(circle at center, rgba(29, 185, 84, 0.05), transparent);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mood-point {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--spotify-green);
+      border-radius: 50%;
+      filter: blur(1px);
+      opacity: 0.6;
+      transition: all 0.5s ease;
+    }
+
+    .mood-point:hover {
+      opacity: 1;
+      transform: scale(2);
+      filter: blur(0);
+      box-shadow: 0 0 10px var(--spotify-green);
+    }
+  </style>
+
+      .algo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+    <!-- AUTH SECTION -->
+    <div id="spotify-auth-section" style="display: none; text-align: center; padding: 120px 20px;">
+      <div class="card" style="max-width: 550px; margin: 0 auto; padding: 60px;">
+        <div class="logo-icon" style="font-size: 80px; margin-bottom: 32px; filter: drop-shadow(0 0 20px var(--spotify-green));">💎</div>
+        <h2 class="card-title" style="font-size: 32px; justify-content: center; margin-bottom: 16px;">Initialize Intelligence</h2>
+        <p class="card-subtitle" style="font-size: 16px; margin-bottom: 40px; color: var(--text-dim); line-height: 1.6;">
+          Authorize the L99 Intelligence Engine to analyze your musical DNA, cluster your library, and generate neural playlists.
+        </p>
+        <button id="authButton" class="btn-primary" style="padding: 20px 60px; font-size: 18px;">
+          <span>AUTHORIZE ACCESS</span>
+        </button>
+        <p style="margin-top: 32px; font-size: 12px; color: var(--text-dim); letter-spacing: 1px; font-weight: 700;">ENCRYPTED VIA SPOTIFY OAUTH 2.0</p>
+      </div>
+    </div>
+
+    <!-- MAIN INTERFACE -->
+    <div id="main-interface">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo-area">
+          <div class="logo-icon">🎵</div>
+          <div class="logo-text">
+            <h1>Smart Playlist Generator</h1>
+            <p>Advanced AI-powered music curation</p>
+          </div>
+        </div>
+        
+        <div class="user-area">
+          <div class="user-info">
+            <div class="user-avatar"></div>
+            <div style="display: flex; flex-direction: column;">
+              <span class="user-name" id="userNameDisplay">Guest Analyst</span>
+              <span class="status" id="auth-text">💎 L99 Clearance</span>
+            </div>
+          </div>
+          <button id="logoutButton" class="logout-btn">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('generate')">🔮 Engine</button>
+        <button class="tab-btn" onclick="switchTab('analytics')">📈 Analytics</button>
+        <button class="tab-btn" onclick="switchTab('artist-intel')">🧠 Intelligence</button>
+        <button class="tab-btn" onclick="switchTab('feedback')">🎭 Feedback</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ Core</button>
+      </div>
+
+      <!-- Cinematic Syncing Overlay -->
+      <div id="enrichmentProgress" class="sync-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h4 style="font-weight: 800; font-size: 14px; letter-spacing: 1px; color: var(--spotify-green);">SYNCING LIBRARY</h4>
+          <span class="progress-text" style="font-size: 12px; font-weight: 700; color: #fff;">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <p style="font-size: 11px; color: var(--text-dim); margin-top: 8px; font-weight: 600;">ENRICHING TRACKS WITH GENRE CLUSTERING...</p>
+      </div>
+
+    <!-- GENERATE TAB -->
+    <div class="content-section active" id="generate">
+      
+      <!-- Algorithm Selection -->
+      <div class="card">
+        <div class="card-title">Choose Generation Algorithm</div>
+        <div class="card-subtitle">Select how your playlists will be created</div>
+        
+        <div class="algo-grid">
+          <div class="algo-card active" onclick="selectAlgo(this, 'kmeans')">
+            <div class="algo-icon">🎯</div>
+            <div class="algo-title">K-Means Clustering</div>
+            <div class="algo-desc">Groups tracks by audio features using unsupervised learning</div>
+            <span class="algo-tag">ML-POWERED</span>
+          </div>
+
+          <div class="algo-card" onclick="selectAlgo(this, 'hybrid')">
+            <div class="algo-icon">⚡</div>
+            <div class="algo-title">Hybrid Scoring</div>
+            <div class="algo-desc">Weighted combination of audio features, genre, artist, and history</div>
+            <span class="algo-tag">RECOMMENDED</span>
+          </div>
+
+          <div class="algo-card" onclick="selectAlgo(this, 'genre')">
+            <div class="algo-icon">🎸</div>
+            <div class="algo-title">Genre-Based</div>
+            <div class="algo-desc">Creates playlists by genre and subgenre embeddings</div>
+            <span class="algo-tag">CLASSIC</span>
+          </div>
+
+          <div class="algo-card" onclick="selectAlgo(this, 'artist')">
+            <div class="algo-icon">👥</div>
+            <div class="algo-title">Artist Similarity</div>
+            <div class="algo-desc">Uses artist similarity graphs and community detection</div>
+            <span class="algo-tag">DISCOVERY</span>
+          </div>
+
+          <div class="algo-card" onclick="selectAlgo(this, 'vibe')">
+            <div class="algo-icon">✨</div>
+            <div class="algo-title">Vibe/Mood</div>
+            <div class="algo-desc">Clusters by mood, energy, and emotional characteristics</div>
+            <span class="algo-tag">EMOTIONAL</span>
+          </div>
+
+          <div class="algo-card" onclick="selectAlgo(this, 'balanced')">
+            <div class="algo-icon">⚖️</div>
+            <div class="algo-title">Balanced Mix</div>
+            <div class="algo-desc">Equal distribution across all dimensions</div>
+            <span class="algo-tag">DIVERSE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mood Selection (for Vibe/Mood algorithm) -->
+      <div class="card" id="moodSection" style="display: none;">
+        <div class="card-title">Select Your Current Mood</div>
+        <div class="card-subtitle">We'll match playlists to how you're feeling</div>
+        
+        <div class="mood-grid">
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">😊</div>
+            <div class="mood-label">Happy</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">😢</div>
+            <div class="mood-label">Sad</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">😌</div>
+            <div class="mood-label">Chill</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">💪</div>
+            <div class="mood-label">Energetic</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">🎉</div>
+            <div class="mood-label">Party</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">🧘</div>
+            <div class="mood-label">Focused</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">😴</div>
+            <div class="mood-label">Sleepy</div>
+          </div>
+          <div class="mood-btn" onclick="selectMood(this)">
+            <div class="mood-emoji">😠</div>
+            <div class="mood-label">Angry</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🚀 Playlist Parameters</div>
+        
+        <div class="control-group">
+          <div class="control-label">
+            <span>Playlist Name Prefix / Signature</span>
+          </div>
+          <input type="text" id="playlist-custom-name" class="input-field" 
+                 placeholder="e.g. Madalina's" style="margin-top: 8px;">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>🎯 Target Density (Number of Playlists)</span>
+            <span class="control-value" id="numPlaylistsVal">10</span>
+          </div>
+          <input type="range" class="slider" min="1" max="30" value="10" 
+                 oninput="updateVal('numPlaylistsVal', this.value)">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>📏 Cluster Range (Min/Max Tracks)</span>
+            <span class="control-value"><span id="minSongsVal">25</span> - <span id="maxSongsVal">200</span></span>
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 8px;">
+            <input type="range" class="slider" min="10" max="100" value="25" 
+                   oninput="updateVal('minSongsVal', this.value)">
+            <input type="range" class="slider" min="50" max="500" value="200" 
+                   oninput="updateVal('maxSongsVal', this.value)">
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button id="generateBtn" class="btn-primary">▶️ Generate Playlists</button>
+          <button id="refreshBtn" class="btn-secondary">🎲 Auto-Tune Parameters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div class="content-section" id="analytics">
+      
+      <!-- Advanced Library Intelligence -->
+      <div class="card">
+        <div class="card-title">🌌 Library Mood Map</div>
+        <div class="card-subtitle">2D projection of your musical taste using PCA & t-SNE</div>
+        <div id="moodMap" class="mood-map">
+          <!-- Mood points will be injected here -->
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+            <p style="color: var(--text-dim); font-size: 14px;">Sync library to generate your neural musical map</p>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-secondary" onclick="app.generateMoodMap()">🧬 Recalculate Embeddings</button>
+        </div>
+      </div>
+
+      <!-- Library Intelligence Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-label">Discovery Coefficient</div>
+          <div class="stat-value" id="discoveryStat">--</div>
+          <div class="stat-subtext">Niche artist ratio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🧬</div>
+          <div class="stat-label">Genre Fluidity</div>
+          <div class="stat-value" id="fluidityStat">--</div>
+          <div class="stat-subtext">Cross-genre overlap</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💎</div>
+          <div class="stat-label">Hidden Gems</div>
+          <div class="stat-value" id="gemsStat">--</div>
+          <div class="stat-subtext">Underrated favorites</div>
+        </div>
+      </div>
+
+      <!-- Smart Insights -->
+      <div class="card">
+        <div class="card-title">Smart Insights</div>
+        <div class="card-subtitle">AI-powered analysis of your library</div>
+        
+        <div class="insights-list">
+          <div class="insight-item">
+            <div class="insight-icon">💡</div>
+            <div class="insight-text">
+              <div class="insight-title">Genre Distribution</div>
+              <div class="insight-desc">Your library is heavily weighted towards Electronic (34%) and Rock (28%)</div>
+            </div>
+            <div class="insight-badge">BALANCED</div>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">🎯</div>
+            <div class="insight-text">
+              <div class="insight-title">Listening Patterns</div>
+              <div class="insight-desc">You prefer high-energy tracks (0.8+ energy) during evenings</div>
+            </div>
+            <div class="insight-badge">PATTERN</div>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">⭐</div>
+            <div class="insight-text">
+              <div class="insight-title">Top Discovery Opportunity</div>
+              <div class="insight-desc">78 artists in your library with <5 tracks - great for discovery playlists</div>
+            </div>
+            <div class="insight-badge">ACTION</div>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">📈</div>
+            <div class="insight-text">
+              <div class="insight-title">Recent Additions</div>
+              <div class="insight-desc">142 tracks added in last 30 days - consider recency-biased playlists</div>
+            </div>
+            <div class="insight-badge">TRENDING</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Listening Trends Visualization -->
+      <div class="card">
+        <div class="card-title">Listening Trends</div>
+        <div class="viz-container">
+          <div class="viz-placeholder">📊</div>
+          <div class="viz-text">Visualization: Genre evolution over time, energy distribution, popularity trends</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARTIST INTELLIGENCE TAB -->
+    <div class="content-section" id="artist-intel">
+      
+      <!-- Artist Similarity Graph -->
+      <div class="card">
+        <div class="card-title">Artist Similarity Network</div>
+        <div class="card-subtitle">Community detection using Louvain algorithm</div>
+        <div class="viz-container">
+          <div class="viz-placeholder">🕸️</div>
+          <div class="viz-text">Interactive graph showing artist connections, communities, and similarity scores</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-secondary">🔍 Explore Communities</button>
+          <button class="btn-secondary">📥 Export Graph Data</button>
+        </div>
+      </div>
+
+      <!-- Genre Embeddings -->
+      <div class="card">
+        <div class="card-title">Genre/Subgenre Embeddings</div>
+        <div class="card-subtitle">t-SNE/UMAP visualization of genre relationships</div>
+        <div class="viz-container">
+          <div class="viz-placeholder">🎨</div>
+          <div class="viz-text">2D projection of genre embeddings showing similar genres clustered together</div>
+        </div>
+      </div>
+
+      <!-- Community Stats -->
+      <div class="card">
+        <div class="card-title">Detected Communities</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-label">Total Communities</div>
+            <div class="stat-value">12</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-label">Largest Community</div>
+            <div class="stat-value">87</div>
+            <div class="stat-subtext">Artists</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔗</div>
+            <div class="stat-label">Avg Connections</div>
+            <div class="stat-value">5.2</div>
+            <div class="stat-subtext">Per artist</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEEDBACK TAB -->
+    <div class="content-section" id="feedback">
+      
+      <!-- Rate Generated Playlists -->
+      <div class="card">
+        <div class="card-title">Rate Your Playlists</div>
+        <div class="card-subtitle">Help improve future recommendations with your feedback</div>
+        
+        <div class="feedback-card">
+          <div class="feedback-info">
+            <h4>Chill Vibes Mix</h4>
+            <p>Generated 2 hours ago • 45 tracks • Hybrid algorithm</p>
+          </div>
+          <div class="rating-stars">
+            <button class="star-btn" onclick="rate(this)">⭐</button>
+            <button class="star-btn" onclick="rate(this)">⭐</button>
+            <button class="star-btn" onclick="rate(this)">⭐</button>
+            <button class="star-btn" onclick="rate(this)">⭐</button>
+            <button class="star-btn" onclick="rate(this)">⭐</button>
+          </div>
+        </div>
+
+        <div class="feedback-card">
+          <div class="feedback-info">
+            <h4>Rock Classics Collection</h4>
+            <p>Generated yesterday • 78 tracks • Genre-based algorithm</p>
+          </div>
+          <div class="rating-stars">
+            <button class="star-btn active" onclick="rate(this)">⭐</button>
+            <button class="star-btn active" onclick="rate(this)">⭐</button>
+            <button class="star-btn active" onclick="rate(this)">⭐</button>
+            <button class="star-btn active" onclick="rate(this)">⭐</button>
+            <button class="star-btn" onclick="rate(this)">⭐</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skip Tracking -->
+      <div class="card">
+        <div class="card-title">Track Skip Analysis</div>
+        <div class="card-subtitle">Tracks you've skipped help us refine recommendations</div>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">⏭️</div>
+            <div class="stat-label">Total Skips</div>
+            <div class="stat-value">234</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-label">Skip Rate</div>
+            <div class="stat-value">12%</div>
+            <div class="stat-subtext">Below average</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-label">Model Accuracy</div>
+            <div class="stat-value">94%</div>
+            <div class="stat-subtext">Improving</div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-secondary">📝 Review Skipped Tracks</button>
+        </div>
+      </div>
+
+      <!-- Learning Progress -->
+      <div class="card">
+        <div class="card-title">Reinforcement Learning Progress</div>
+        <div class="card-subtitle">How your feedback improves the model</div>
+        
+        <div class="insights-list">
+          <div class="insight-item">
+            <div class="insight-icon">🎓</div>
+            <div class="insight-text">
+              <div class="insight-title">Learning Status</div>
+              <div class="insight-desc">Model has processed 45 feedback sessions and 234 skip events</div>
+            </div>
+            <div class="insight-badge">ACTIVE</div>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">📈</div>
+            <div class="insight-text">
+              <div class="insight-title">Improvement Rate</div>
+              <div class="insight-desc">Recommendation accuracy increased by 18% in last 30 days</div>
+            </div>
+            <div class="insight-badge">+18%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADVANCED SETTINGS TAB -->
+    <div class="content-section" id="settings">
+      
+      <!-- Quick Toggles -->
+      <div class="card">
+        <div class="card-title">Quick Settings</div>
+        <div class="toggle-group">
+          <div class="toggle-item">
+            <span class="toggle-label">Include Genre Playlists</span>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label">Avoid Duplicates</span>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label">Smart Sizing</span>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label">Enable Mood Detection</span>
+            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label">Community Detection</span>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-item">
+            <span class="toggle-label">Lyrics Analysis</span>
+            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bias Controls (for Hybrid Algorithm) -->
+      <div class="card">
+        <div class="card-title">Algorithm Weights & Biases</div>
+        <div class="card-subtitle">Fine-tune hybrid scoring algorithm</div>
+        
+        <div class="control-group">
+          <div class="control-label">
+            <span>Recency Bias</span>
+            <span class="control-value" id="recencyVal">0.3</span>
+          </div>
+          <input type="range" class="slider" min="0" max="1" step="0.1" value="0.3" 
+                 oninput="updateVal('recencyVal', this.value)">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Popularity Bias</span>
+            <span class="control-value" id="popularityVal">0.5</span>
+          </div>
+          <input type="range" class="slider" min="0" max="1" step="0.1" value="0.5" 
+                 oninput="updateVal('popularityVal', this.value)">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Diversity Cap</span>
+            <span class="control-value" id="diversityVal">0.7</span>
+          </div>
+          <input type="range" class="slider" min="0" max="1" step="0.1" value="0.7" 
+                 oninput="updateVal('diversityVal', this.value)">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Time Decay Factor</span>
+            <span class="control-value" id="timeDecayVal">0.4</span>
+          </div>
+          <input type="range" class="slider" min="0" max="1" step="0.1" value="0.4" 
+                 oninput="updateVal('timeDecayVal', this.value)">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Audio Features Weight</span>
+            <span class="control-value" id="audioWeightVal">0.6</span>
+          </div>
+          <input type="range" class="slider" min="0" max="1" step="0.1" value="0.6" 
+                 oninput="updateVal('audioWeightVal', this.value)">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Genre Weight</span>
+            <span class="control-value" id="genreWeightVal">0.4</span>
+          </div>
+          <input type="range" class="slider" min="0" max="1" step="0.1" value="0.4" 
+                 oninput="updateVal('genreWeightVal', this.value)">
+        </div>
+      </div>
+
+      <!-- K-Means Settings -->
+      <div class="collapsible-header" onclick="toggleCollapsible('kmeansSettings')">
+        <span class="collapsible-title">K-Means Clustering Settings</span>
+        <span>▼</span>
+      </div>
+      <div class="collapsible-content" id="kmeansSettings">
+        <div class="card">
+          <div class="control-group">
+            <div class="control-label">
+              <span>Number of Clusters (K)</span>
+              <span class="control-value" id="kVal">10</span>
+            </div>
+            <input type="range" class="slider" min="3" max="30" value="10" 
+                   oninput="updateVal('kVal', this.value)">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Max Iterations</span>
+              <span class="control-value" id="maxIterVal">300</span>
+            </div>
+            <input type="range" class="slider" min="100" max="1000" step="50" value="300" 
+                   oninput="updateVal('maxIterVal', this.value)">
+          </div>
+
+          <div class="toggle-group">
+            <div class="toggle-item">
+              <span class="toggle-label">Auto K Selection</span>
+              <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+            </div>
+            <div class="toggle-item">
+              <span class="toggle-label">Elbow Method</span>
+              <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Community Detection Settings -->
+      <div class="collapsible-header" onclick="toggleCollapsible('communitySettings')">
+        <span class="collapsible-title">Community Detection Settings</span>
+        <span>▼</span>
+      </div>
+      <div class="collapsible-content" id="communitySettings">
+        <div class="card">
+          <div class="card-subtitle">Choose algorithm for artist community detection</div>
+          
+          <div class="toggle-group">
+            <div class="toggle-item">
+              <span class="toggle-label">Louvain Algorithm</span>
+              <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+            </div>
+            <div class="toggle-item">
+              <span class="toggle-label">Label Propagation</span>
+              <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Similarity Threshold</span>
+              <span class="control-value" id="simThresholdVal">0.6</span>
+            </div>
+            <input type="range" class="slider" min="0" max="1" step="0.1" value="0.6" 
+                   oninput="updateVal('simThresholdVal', this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT TAB -->
+    <div class="content-section" id="export">
+      
+      <!-- Export Options -->
+      <div class="card">
+        <div class="card-title">Export Enhanced Database</div>
+        <div class="card-subtitle">Download your music data with AI-generated insights</div>
+        
+        <div class="insights-list">
+          <div class="insight-item">
+            <div class="insight-icon">📊</div>
+            <div class="insight-text">
+              <div class="insight-title">CSV Format</div>
+              <div class="insight-desc">Track data with audio features, genres, and clustering results</div>
+            </div>
+            <button class="btn-secondary" style="margin: 0;">📥 Export CSV</button>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">📈</div>
+            <div class="insight-text">
+              <div class="insight-title">JSON Format</div>
+              <div class="insight-desc">Complete database with nested structures and relationships</div>
+            </div>
+            <button id="exportBtn" class="btn-secondary" style="margin: 0;">📥 Export JSON</button>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">🎨</div>
+            <div class="insight-text">
+              <div class="insight-title">Analysis Report</div>
+              <div class="insight-desc">PDF report with visualizations, insights, and statistics</div>
+            </div>
+            <button class="btn-secondary" style="margin: 0;">📥 Generate Report</button>
+          </div>
+
+          <div class="insight-item">
+            <div class="insight-icon">🕸️</div>
+            <div class="insight-text">
+              <div class="insight-title">Artist Graph</div>
+              <div class="insight-desc">Graph data for artist similarity network (GraphML format)</div>
+            </div>
+            <button class="btn-secondary" style="margin: 0;">📥 Export Graph</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export History -->
+      <div class="card">
+        <div class="card-title">Export History</div>
+        
+        <div class="feedback-card">
+          <div class="feedback-info">
+            <h4>Complete Database Export</h4>
+            <p>Exported 3 days ago • JSON • 2.4 MB</p>
+          </div>
+          <button class="btn-secondary" style="margin: 0;">🔄 Re-download</button>
+        </div>
+
+        <div class="feedback-card">
+          <div class="feedback-info">
+            <h4>Analysis Report - December</h4>
+            <p>Exported 1 week ago • PDF • 5.7 MB</p>
+          </div>
+          <button class="btn-secondary" style="margin: 0;">🔄 Re-download</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Core App Modules -->
+  <script src="../js/config.js"></script>
+  <script src="../js/simple-spotify-auth.js"></script>
+  <script src="../js/music-database.js"></script>
+  <script src="../js/enhanced-music-database.js"></script>
+  <script src="../js/ui-interactions.js"></script>
+  <script src="../js/script.js"></script>
+
+  <script>
+    // Initialize the real app when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      window.app = new SpotifyPlaylistGenerator();
+      console.log('🚀 Spotify Smart Playlist Generator Started!');
+    });
+
+    // Helper functions for the UI (keeping them for compatibility)
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+    }
+
+    function selectAlgo(element, algo) {
+      document.querySelectorAll('.algo-card').forEach(card => card.classList.remove('active'));
+      element.classList.add('active');
+      document.getElementById('moodSection').style.display = (algo === 'vibe') ? 'block' : 'none';
+    }
+
+    function updateVal(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function toggleSwitch(element) {
+      element.classList.toggle('active');
+    }
+
+    function toggleCollapsible(id) {
+      const content = document.getElementById(id);
+      content.classList.toggle('open');
+    }
+  </script>
+
+  <!-- Core App Modules -->
+  <script src="../js/config.js"></script>
+  <script src="../js/simple-spotify-auth.js"></script>
+  <script src="../js/music-database.js"></script>
+  <script src="../js/enhanced-music-database.js"></script>
+  <script src="../js/ui-interactions.js"></script>
+  <script src="../js/script.js"></script>
+
+  <script>
+    // Initialize the real app when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      window.app = new SpotifyPlaylistGenerator();
+      console.log('🚀 Spotify Smart Playlist Generator Started!');
+    });
+  </script>
+</body>
+</html>

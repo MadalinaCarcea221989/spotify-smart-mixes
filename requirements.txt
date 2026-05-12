@@ -1,0 +1,51 @@
+# Core data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# HTTP requests and API calls
+requests>=2.28.0
+python-dotenv>=1.0.0
+
+
+# Music metadata APIs
+musicbrainzngs>=0.7.1
+pylast>=5.0.0
+
+# Development tools (code formatting and linting)
+black>=23.0.0
+flake8>=6.0.0
+isort>=5.12.0
+
+# File and path handling (built into Python 3.4+)
+# pathlib - included in standard library
+
+# JSON and CSV handling (built into Python)
+# json - included in standard library
+# csv - included in standard library
+
+# Logging and utilities (built into Python)
+# logging - included in standard library
+# time - included in standard library
+# datetime - included in standard library
+# re - included in standard library
+# sys - included in standard library
+# os - included in standard library
+# hashlib - included in standard library
+# typing - included in standard library
+
+# Optional: For enhanced data analysis (uncomment if needed)
+matplotlib>=3.6.0
+seaborn>=0.12.0
+scikit-learn>=1.2.0
+hdbscan>=0.8.29
+nltk>=3.8.0
+httpx>=0.24.0
+
+spotipy>=2.23.0
+
+
+# Optional: For web interface (uncomment if adding Flask/FastAPI)
+# flask>=2.3.0
+fastapi>=0.95.0
+uvicorn>=0.20.0
+python-multipart>=0.0.6

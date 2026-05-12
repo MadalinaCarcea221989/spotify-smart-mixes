@@ -1,0 +1,23 @@
+    function toggleCollapsible(id) {
+      const content = document.getElementById(id);
+      content.classList.toggle('open');
+    }
+  </script>
+
+  <!-- Core App Modules -->
+  <script src="../js/config.js"></script>
+  <script src="../js/simple-spotify-auth.js"></script>
+  <script src="../js/music-database.js"></script>
+  <script src="../js/enhanced-music-database.js"></script>
+  <script src="../js/ui-interactions.js"></script>
+  <script src="../js/script.js"></script>
+
+  <script>
+    // Initialize the real app when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      window.app = new SpotifyPlaylistGenerator();
+      console.log('🚀 Spotify Smart Playlist Generator Started!');
+    });
+  </script>
+</body>
+</html>
