@@ -231,11 +231,30 @@ async def get_library_genres(min_count: int = 5, limit: int = 12):
         return {"genres": []}
 
 @router.get("/library/algorithm_insights")
-async def get_algorithm_insights():
-    """Run all clustering algorithms on the synced library and return comparative metrics."""
+async def get_algorithm_insights_list():
+    """Return the list of algorithm IDs that need processing."""
+    ALGORITHMS = [
+        {"id": "kmeans",   "name": "AI Clusters",   "description": "Balanced, evenly-sized playlists using K-Means"},
+        {"id": "hdbscan",  "name": "Natural Vibe",  "description": "Organic, density-based community discovery"},
+        {"id": "spectral", "name": "Spectral",      "description": "Deep-math graph partitioning for hidden niches"},
+        {"id": "harmonic", "name": "DJ Flow",        "description": "Camelot-Wheel harmonic key sequencing"},
+    ]
+    
+    data_path = "data/output/auto_synced_library.json"
+    total_tracks = 0
+    if os.path.exists(data_path):
+        with open(data_path, "r") as f:
+            data = json.load(f)
+            total_tracks = len(data.get("tracks", []))
+            
+    return {"algorithms": ALGORITHMS, "total_tracks": total_tracks}
+
+@router.get("/library/algorithm_insights/{algo_id}")
+async def get_single_algo_insights(algo_id: str):
+    """Run a specific clustering algorithm and return its metrics."""
     data_path = "data/output/auto_synced_library.json"
     if not os.path.exists(data_path):
-        return {"error": "Library not synced yet.", "algorithms": []}
+        raise HTTPException(status_code=404, detail="Library not synced yet.")
 
     try:
         with open(data_path, "r", encoding="utf-8") as f:
@@ -243,53 +262,56 @@ async def get_algorithm_insights():
             tracks = data.get("tracks", [])
 
         if not tracks:
-            return {"error": "Library is empty.", "algorithms": []}
+            raise HTTPException(status_code=400, detail="Library is empty.")
 
-        ALGORITHMS = [
-            {"id": "kmeans",   "name": "AI Clusters",   "description": "Balanced, evenly-sized playlists using K-Means"},
-            {"id": "hdbscan",  "name": "Natural Vibe",  "description": "Organic, density-based community discovery"},
-            {"id": "spectral", "name": "Spectral",      "description": "Deep-math graph partitioning for hidden niches"},
-            {"id": "harmonic", "name": "DJ Flow",        "description": "Camelot-Wheel harmonic key sequencing"},
-        ]
+        ALGO_MAP = {
+            "kmeans":   {"name": "AI Clusters",   "description": "Balanced, evenly-sized playlists using K-Means"},
+            "hdbscan":  {"name": "Natural Vibe",  "description": "Organic, density-based community discovery"},
+            "spectral": {"name": "Spectral",      "description": "Deep-math graph partitioning for hidden niches"},
+            "harmonic": {"name": "DJ Flow",        "description": "Camelot-Wheel harmonic key sequencing"},
+        }
+        
+        if algo_id not in ALGO_MAP:
+            raise HTTPException(status_code=404, detail="Algorithm not found.")
 
-        async def run_algo(algo, tracks):
-            try:
-                # Use to_thread for CPU-bound clustering tasks
-                if algo["id"] == "hdbscan":
-                    labels = await asyncio.to_thread(hdbscan_cluster, tracks, 10)
-                elif algo["id"] == "spectral":
-                    labels = await asyncio.to_thread(spectral_cluster, tracks, 8)
-                else:
-                    labels = await asyncio.to_thread(kmeans_cluster, tracks, 8)
+        # Run the specific algorithm
+        try:
+            if algo_id == "hdbscan":
+                labels = await asyncio.to_thread(hdbscan_cluster, tracks, 10)
+            elif algo_id == "spectral":
+                labels = await asyncio.to_thread(spectral_cluster, tracks, 8)
+            else:
+                labels = await asyncio.to_thread(kmeans_cluster, tracks, 8)
 
-                clusters_map = {}
-                for i, label in enumerate(labels):
-                    if label not in clusters_map: clusters_map[label] = []
-                    clusters_map[label].append(tracks[i])
+            clusters_map = {}
+            for i, label in enumerate(labels):
+                if label not in clusters_map: clusters_map[label] = []
+                clusters_map[label].append(tracks[i])
 
-                valid_clusters = [c for lbl, c in clusters_map.items() if lbl != -1 and len(c) >= 10]
-                if not valid_clusters:
-                    return {**algo, "cluster_count": 0, "avg_cohesion": 0, "avg_purity": 0, "avg_energy": 0, "avg_danceability": 0, "avg_valence": 0, "top_genres": []}
+            valid_clusters = [c for lbl, c in clusters_map.items() if lbl != -1 and len(c) >= 5]
+            if not valid_clusters:
+                return {**ALGO_MAP[algo_id], "id": algo_id, "cluster_count": 0, "avg_cohesion": 0, "avg_purity": 0}
 
-                all_quality = await asyncio.gather(*[asyncio.to_thread(analyze_quality, c) for c in valid_clusters])
-                n = len(all_quality)
+            all_quality = await asyncio.gather(*[asyncio.to_thread(analyze_quality, c) for c in valid_clusters])
+            n = len(all_quality)
 
-                return {
-                    **algo,
-                    "cluster_count": n,
-                    "avg_cohesion": round(sum(q["cohesion"] for q in all_quality) / n, 3),
-                    "avg_purity": round(sum(q["genre_purity"] for q in all_quality) / n, 3),
-                    "avg_energy": round(sum(q["avg_energy"] for q in all_quality) / n, 3),
-                    "avg_danceability": round(sum(q["avg_danceability"] for q in all_quality) / n, 3),
-                    "avg_valence": round(sum(q["avg_valence"] for q in all_quality) / n, 3),
-                    "top_genres": list({g for q in all_quality for g in q["top_genres"]})[:5],
-                }
-            except Exception as e:
-                print(f"Algorithm {algo['id']} error: {e}")
-                return {**algo, "cluster_count": 0, "avg_cohesion": 0, "avg_purity": 0, "error": str(e)}
+            return {
+                **ALGO_MAP[algo_id],
+                "id": algo_id,
+                "cluster_count": n,
+                "avg_cohesion": round(sum(q["cohesion"] for q in all_quality) / n, 3),
+                "avg_purity": round(sum(q["genre_purity"] for q in all_quality) / n, 3),
+                "avg_energy": round(sum(q["avg_energy"] for q in all_quality) / n, 3),
+                "avg_danceability": round(sum(q["avg_danceability"] for q in all_quality) / n, 3),
+                "avg_valence": round(sum(q["avg_valence"] for q in all_quality) / n, 3),
+                "top_genres": list({g for q in all_quality for g in q["top_genres"]})[:5],
+            }
+        except Exception as e:
+            print(f"Algorithm {algo_id} error: {e}")
+            return {**ALGO_MAP[algo_id], "id": algo_id, "cluster_count": 0, "avg_cohesion": 0, "avg_purity": 0, "error": str(e)}
 
-        results = await asyncio.gather(*[run_algo(algo, tracks) for algo in ALGORITHMS])
-        return {"algorithms": results, "total_tracks": len(tracks)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     except Exception as e:
         print(f"Algorithm Insights Error: {e}")

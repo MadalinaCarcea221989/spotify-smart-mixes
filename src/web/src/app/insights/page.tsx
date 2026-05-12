@@ -66,12 +66,29 @@ export default function InsightsPage() {
       const res = await fetch(`${API_BASE}/library/algorithm_insights`);
       if (res.ok) {
         const data = await res.json();
-        setAlgoInsights(data.algorithms || []);
         setTotalTracks(data.total_tracks || 0);
+        
+        // Now fetch each algorithm individually to prevent timeouts
+        const algos = data.algorithms || [];
+        setAlgoInsights(algos.map((a: any) => ({ ...a, loading: true })));
+        setAlgoLoading(false);
+
+        for (const algo of algos) {
+          try {
+            const detailRes = await fetch(`${API_BASE}/library/algorithm_insights/${algo.id}`);
+            if (detailRes.ok) {
+              const detailData = await detailRes.json();
+              setAlgoInsights(prev => prev.map(item => 
+                item.id === algo.id ? { ...detailData, loading: false } : item
+              ));
+            }
+          } catch (err) {
+            console.error(`Failed to fetch ${algo.id} insights`, err);
+          }
+        }
       }
     } catch (e) {
       console.error("Failed to fetch algorithm insights", e);
-    } finally {
       setAlgoLoading(false);
     }
   };
@@ -189,11 +206,29 @@ export default function InsightsPage() {
             {algoInsights.map((algo, i) => {
               const meta = ALGO_META[algo.id] || ALGO_META.kmeans;
               const Icon = meta.icon;
+
+              if (algo.loading) {
+                return (
+                  <div key={algo.id} className="bg-card border border-border rounded-2xl p-6 animate-pulse space-y-4">
+                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                      <Icon size={18} className="text-muted/20" />
+                    </div>
+                    <div className="h-3 bg-white/5 rounded w-2/3" />
+                    <div className="h-2 bg-white/5 rounded" />
+                    <div className="h-2 bg-white/5 rounded w-3/4" />
+                    <div className="pt-4 border-t border-white/5 space-y-2">
+                      <div className="h-1 bg-white/5 rounded" />
+                      <div className="h-1 bg-white/5 rounded" />
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <motion.div
                   key={algo.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.08 }}
                   className="bg-card border border-border hover:border-white/20 rounded-2xl p-6 flex flex-col gap-5 transition-all"
                 >
