@@ -6,6 +6,7 @@ import { spotifyAuth } from "@/lib/spotifyAuth";
 import Sidebar from "@/components/Sidebar";
 import { SyncProvider } from "@/context/SyncContext";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 export default function RootLayout({
@@ -38,6 +39,7 @@ export default function RootLayout({
           </div>
         </SyncProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
