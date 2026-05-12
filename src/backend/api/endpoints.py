@@ -33,8 +33,8 @@ class GenerateRequest(BaseModel):
     tracks: List[Dict[str, Any]]
     num_playlists: int = 5
     min_size: int = 10
-    algorithm: str = "kmeans" # kmeans, hdbscan, harmonic
-    max_size: int = 100
+    max_tracks: int = 50
+    algorithm: str = "kmeans"
 
 @router.get("/sync_status/ping")
 async def ping():
@@ -143,6 +143,57 @@ async def get_library_features():
     except Exception as e:
         print(f"Error in features: {e}")
         return {"danceability": 0, "energy": 0, "acousticness": 0, "valence": 0}
+
+@router.get("/library/map_image")
+async def get_library_map():
+    """Generates a dynamic PCA map of the library."""
+    import matplotlib.pyplot as plt
+    import io
+    from fastapi.responses import Response
+    from sklearn.decomposition import PCA
+    import numpy as np
+
+    data_path = "data/output/auto_synced_library.json"
+    if not os.path.exists(data_path):
+        # Return a blank placeholder if no data
+        plt.figure(figsize=(8, 6))
+        plt.text(0.5, 0.5, "Please Sync Library to Generate Map", ha='center')
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        plt.close()
+        return Response(content=buf.getvalue(), media_type="image/png")
+
+    with open(data_path, "r") as f:
+        data = json.load(f)
+        tracks = data.get("tracks", [])
+
+    if not tracks:
+        return Response(content=b"", media_type="image/png")
+
+    # Extract features for PCA
+    features = []
+    for t in tracks:
+        f = t.get("audio_features", {})
+        features.append([
+            f.get("danceability", 0.5),
+            f.get("energy", 0.5),
+            f.get("valence", 0.5),
+            f.get("acousticness", 0.5)
+        ])
+    
+    X = np.array(features)
+    pca = PCA(n_components=2)
+    components = pca.fit_transform(X)
+
+    plt.figure(figsize=(10, 7), facecolor='none')
+    plt.scatter(components[:, 0], components[:, 1], alpha=0.6, c=np.arange(len(tracks)), cmap='viridis')
+    plt.title("Musical DNA Map (Live)", color='white')
+    plt.axis('off')
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', transparent=True)
+    plt.close()
+    return Response(content=buf.getvalue(), media_type="image/png")
 
 @router.get("/library/genres")
 async def get_library_genres(min_count: int = 5, limit: int = 12): 
@@ -373,6 +424,10 @@ async def generate_playlists(req: GenerateRequest):
             # Generate Semantic Name
             name = generate_semantic_name(quality)
             
+            # Apply Max Tracks limit
+            if len(cluster_tracks) > req.max_tracks:
+                cluster_tracks = cluster_tracks[:req.max_tracks]
+
             playlists.append({
                 "id": f"cluster_{i}_{id(cluster_tracks)}",
                 "name": name,
@@ -394,16 +449,36 @@ def create_spotify_playlist(
 ):
     sp = spotipy.Spotify(auth=token)
     try:
+        print(f"🛠️ EXPORT: Attempting to create playlist '{playlist_name}' with {len(track_ids)} tracks.")
         user = sp.current_user()
         user_id = user['id']
+        
+        # 1. Create the playlist
         playlist = sp.user_playlist_create(user_id, playlist_name)
         playlist_id = playlist['id']
-        # Add tracks in chunks of 100
-        for i in range(0, len(track_ids), 100):
-            sp.playlist_add_items(playlist_id, track_ids[i:i+100])
-        log_activity("export", f"Playlist '{playlist_name}' created on Spotify.")
-        return {"status": "success", "playlist_id": playlist_id}
+        
+        # 2. Filter and format track IDs (ensure they are just the IDs)
+        clean_track_ids = []
+        for tid in track_ids:
+            if not tid: continue
+            # Spotify IDs are usually 22 chars. If it's a full URI, extract ID.
+            clean_id = tid.split(':')[-1] if ':' in tid else tid
+            clean_track_ids.append(clean_id)
+
+        if not clean_track_ids:
+            print("⚠️ EXPORT WARNING: No valid track IDs provided.")
+            return {"status": "error", "message": "No valid tracks to add."}
+
+        # 3. Add tracks in chunks of 100
+        for i in range(0, len(clean_track_ids), 100):
+            chunk = clean_track_ids[i:i+100]
+            sp.playlist_add_items(playlist_id, chunk)
+            print(f"✅ EXPORT: Added chunk {i//100 + 1} ({len(chunk)} tracks)")
+
+        log_activity("export", f"Playlist '{playlist_name}' created on Spotify with {len(clean_track_ids)} tracks.")
+        return {"status": "success", "playlist_id": playlist_id, "count": len(clean_track_ids)}
     except Exception as e:
+        print(f"❌ EXPORT ERROR: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 @router.post("/cluster/kmeans")

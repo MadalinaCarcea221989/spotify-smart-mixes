@@ -35,21 +35,23 @@ def generate_semantic_name(analysis):
     dance = analysis.get("avg_danceability", 0.5)
     top_genres = analysis.get("top_genres", [])
     
+    # 1. Smarter Genre Filtering
+    # If a genre is too common, we try to find a more specific one
+    GENRE_BLACKLIST = ["manele", "favorites", "seen live", "2024", "2023", "pop"]
+    
+    filtered_genres = [g for g in top_genres if g.lower() not in GENRE_BLACKLIST]
+    core_genre = filtered_genres[0] if filtered_genres else (top_genres[0] if top_genres else "Musical")
+
     prefixes = []
-    if energy > 0.65: prefixes.extend(["High Voltage", "Kinetic", "Electric"])
-    elif energy < 0.45: prefixes.extend(["Midnight", "Ambient", "Lucid"])
+    if energy > 0.7: prefixes.extend(["High Voltage", "Kinetic", "Electric", "Turbo"])
+    elif energy < 0.4: prefixes.extend(["Midnight", "Ambient", "Lucid", "Serene"])
     
-    if valence > 0.65: prefixes.extend(["Euphoric", "Radiant", "Golden"])
-    elif valence < 0.45: prefixes.extend(["Moody", "Deep", "Shadow"])
+    if valence > 0.7: prefixes.extend(["Euphoric", "Radiant", "Golden", "Bliss"])
+    elif valence < 0.4: prefixes.extend(["Moody", "Deep", "Shadow", "Noir"])
     
-    if dance > 0.65: prefixes.extend(["Groove", "Rhythmic", "Bounce"])
+    if dance > 0.7: prefixes.extend(["Groove", "Rhythmic", "Bounce", "Club"])
     
     prefix = random.choice(prefixes) if prefixes else random.choice(["Ethereal", "Sonic", "Abstract", "Nomadic", "Quantum"])
     
-    if top_genres:
-        core = top_genres[0].title()
-        suffixes = ["Session", "Mix", "Wave", "Collective", "Flow", "Vibration"]
-        return f"{prefix} {core} {random.choice(suffixes)}"
-    
-    suffixes = ["Pulse", "Atmosphere", "Frequency", "Sequence", "Resonance"]
-    return f"{prefix} {random.choice(suffixes)}"
+    suffixes = ["Session", "Mix", "Wave", "Collective", "Flow", "Vibration", "Sequence", "Resonance"]
+    return f"{prefix} {core_genre.title()} {random.choice(suffixes)}"

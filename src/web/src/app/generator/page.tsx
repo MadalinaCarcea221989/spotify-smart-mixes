@@ -10,6 +10,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8001/
 export default function GeneratorPage() {
   const [numPlaylists, setNumPlaylists] = useState(10);
   const [minTracks, setMinTracks] = useState(25);
+  const [maxTracks, setMaxTracks] = useState(50);
   const [namingPrefix, setNamingPrefix] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [playlists, setPlaylists] = useState<any[]>([]);
@@ -79,6 +80,7 @@ export default function GeneratorPage() {
           tracks: [], // Backend will auto-load from file
           num_playlists: numPlaylists, 
           min_size: minTracks,
+          max_tracks: maxTracks,
           algorithm
         })
       });
@@ -197,6 +199,18 @@ export default function GeneratorPage() {
                 <input 
                   type="range" min="10" max="100" value={minTracks} 
                   onChange={(e) => setMinTracks(parseInt(e.target.value))}
+                  className="w-full accent-spotify-green bg-background h-1.5 rounded-full appearance-none cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted">Maximum Tracks</label>
+                  <span className="text-spotify-green font-bold">{maxTracks} per Mix</span>
+                </div>
+                <input 
+                  type="range" min="10" max="100" value={maxTracks} 
+                  onChange={(e) => setMaxTracks(parseInt(e.target.value))}
                   className="w-full accent-spotify-green bg-background h-1.5 rounded-full appearance-none cursor-pointer"
                 />
               </div>

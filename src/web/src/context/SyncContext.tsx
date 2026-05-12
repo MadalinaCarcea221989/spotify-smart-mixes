@@ -29,7 +29,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           setSyncProgress(Math.round((data.current / data.total) * 100));
         }
         setSyncStatus(data.status);
-        
+
         if (data.status === 'completed') {
           setIsSyncing(false);
           setActiveTokenId(null);
@@ -60,11 +60,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const startSync = async () => {
     const token = spotifyAuth.getToken();
     if (!token) return;
-    
+
     setIsSyncing(true);
     setSyncProgress(0);
     setSyncStatus('starting');
-    
+
     try {
       const res = await fetch(`${API_BASE}/sync_library`, {
         method: 'POST',

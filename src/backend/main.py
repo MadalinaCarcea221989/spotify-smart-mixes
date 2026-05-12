@@ -1,6 +1,7 @@
 """
 Main FastAPI app entry point for Spotify Smart Playlist Generator backend.
 """
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -14,17 +15,18 @@ app = FastAPI(title="Spotify Smart Playlist Generator")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:8000", 
-        "http://127.0.0.1:8000", 
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
         "http://localhost:3000",
         "https://spotify-smart-mixes.vercel.app",
-        "https://spotify-smart-mixes-madalina-carcea-s-projects.vercel.app"
+        "https://spotify-smart-mixes-madalina-carcea-s-projects.vercel.app",
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app", 
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # 2. Security Headers Middleware (Production Grade)
 @app.middleware("http")
@@ -33,22 +35,30 @@ async def add_security_headers(request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Strict-Transport-Security"] = (
+        "max-age=31536000; includeSubDomains"
+    )
     return response
+
 
 app.include_router(api_router, prefix="/api")
 
 # Serve the entire frontend directory
-app.mount("/html", StaticFiles(directory="src/frontend/html", html=True), name="html")
+app.mount(
+    "/html", StaticFiles(directory="src/frontend/html", html=True), name="html"
+)
 app.mount("/js", StaticFiles(directory="src/frontend/js"), name="js")
 app.mount("/css", StaticFiles(directory="src/frontend/css"), name="css")
+
 
 @app.get("/")
 async def root():
     return RedirectResponse(url="/html/index.html")
 
+
 @app.get("/callback.html")
 async def callback_redirect():
     return RedirectResponse(url="/html/callback.html")
+
 
 # Add custom error handlers, logging, and middleware here
