@@ -17,11 +17,12 @@ app.add_middleware(
         "http://localhost:8000", 
         "http://127.0.0.1:8000", 
         "http://localhost:3000",
-        "https://*.vercel.app" # Allows any Vercel deployment
+        "https://spotify-smart-mixes.vercel.app",
+        "https://spotify-smart-mixes-madalina-carcea-s-projects.vercel.app"
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app", # For wildcard support
+    allow_origin_regex=r"https://.*\.vercel\.app", 
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
