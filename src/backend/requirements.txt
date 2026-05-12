@@ -1,8 +1,23 @@
-fastapi
-uvicorn
-scikit-learn
-hdbscan
-numpy
-pandas
-transformers
-pytest
+# Core data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# HTTP requests and API calls
+requests>=2.28.0
+python-dotenv>=1.0.0
+
+# Music metadata APIs
+musicbrainzngs>=0.7.1
+pylast>=5.0.0
+
+# ML and Clustering
+scikit-learn>=1.2.0
+hdbscan>=0.8.29
+nltk>=3.8.0
+httpx>=0.24.0
+spotipy>=2.23.0
+
+# Web Framework
+fastapi>=0.95.0
+uvicorn>=0.20.0
+python-multipart>=0.0.6
