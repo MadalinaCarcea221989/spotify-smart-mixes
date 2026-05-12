@@ -64,6 +64,8 @@ class LibrarySyncManager:
                     break
 
             self.progress["total"] = len(all_tracks)
+            from src.backend.utils.activity import log_activity
+            log_activity("sync", f"Found {len(all_tracks)} tracks. Starting enrichment...")
             self.progress["status"] = "enriching_metadata"
             
             # 2. Fetch Artist Genres from Spotify (more reliable than track tags)

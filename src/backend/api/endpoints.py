@@ -363,7 +363,7 @@ async def trigger_sync(background_tasks: BackgroundTasks, token: str = Body(...,
     token_id = f"{token[:10]}{id(token)}" # Unique ID for this sync
     active_syncs[token_id] = sync_manager
     
-    log_activity("sync", f"Library Sync started (Scanning 2,578 tracks)...")
+    log_activity("sync", "Initializing Library Sync...")
     
     # Use FastAPI native background tasks for better stability
     background_tasks.add_task(sync_manager.sync_library)
